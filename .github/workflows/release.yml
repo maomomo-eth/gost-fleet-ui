@@ -1,0 +1,52 @@
+name: 构建并发布最新版本
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 构建 dist 并更新 Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建生产文件
+        run: npm run build
+
+      - name: 打包 dist
+        run: |
+          cd dist
+          zip -r ../gost-fleet-ui-dist.zip .
+
+      - name: 更新最新构建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: Gost Fleet 最新构建
+          body: |
+            此 Release 由 GitHub Actions 自动更新。
+
+            提交：${{ github.sha }}
+            构建时间：${{ github.event.head_commit.timestamp || github.run_id }}
+          prerelease: true
+          make_latest: false
+          files: gost-fleet-ui-dist.zip
+          overwrite_files: true

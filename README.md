@@ -20,6 +20,10 @@ npm run dev
 
 默认通过 `GET {API_URL}/config` 验证连接，并在已填写用户名或密码时使用 HTTP Basic Auth。
 
+## 自动构建 Release
+
+推送到 `main` 后，GitHub Actions 会自动构建 `dist`，并更新预发布标签 `latest` 中的 `gost-fleet-ui-dist.zip` 附件。也可以从仓库的 **Actions** 页面手动运行“构建并发布最新版本”。
+
 连接地址应填写 API 根地址；如果 GOST 配置了 `pathPrefix`，需将此前缀包含在地址中，例如 `https://example.com/gost`，程序将请求 `https://example.com/gost/config`。
 
 ## 部署到 Nginx 二级目录
