@@ -24,6 +24,24 @@ npm run dev
 
 推送到 `main` 后，GitHub Actions 会自动构建 `dist`，并更新预发布标签 `latest` 中的 `gost-fleet-ui-dist.zip` 附件。也可以从仓库的 **Actions** 页面手动运行“构建并发布最新版本”。
 
+## Linux 一键安装 Gost
+
+脚本会下载并校验官方最新 GOST Linux 发布包，安装到 `/usr/local/bin/gost`，创建 systemd 服务，并固定从 `/etc/gost/gost.yaml` 启动。已有配置不会覆盖；需要重建初始配置时添加 `--force`。
+
+```bash
+git clone https://github.com/maomomo-eth/gost-fleet-ui.git
+cd gost-fleet-ui
+sudo bash scripts/install-gost.sh --api-port 18080 --api-user admin
+```
+
+脚本会安全地交互输入 API 密码。也可以自动化调用：
+
+```bash
+sudo bash scripts/install-gost.sh --api-port 18080 --api-user admin --api-password '请替换为强密码'
+```
+
+安装后在管理 UI 的“写入配置文件”中，默认目标就是 `/etc/gost/gost.yaml`，与 systemd 的 `ExecStart` 一致。路径属于远端服务器或容器文件系统，确保 Gost 进程有写入权限。
+
 连接地址应填写 API 根地址；如果 GOST 配置了 `pathPrefix`，需将此前缀包含在地址中，例如 `https://example.com/gost`，程序将请求 `https://example.com/gost/config`。
 
 ## 部署到 Nginx 二级目录

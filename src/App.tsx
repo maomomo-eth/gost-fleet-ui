@@ -25,6 +25,7 @@ type JsonEditor = { resource: Resource; originalName?: string; value: string };
 type JsonTemplate = { name: string; description: string; value: JsonObject };
 
 const storageKey = "gost-fleet-servers";
+const defaultGostConfigPath = "/etc/gost/gost.yaml";
 const resources: Resource[] = [
   {
     key: "services",
@@ -311,7 +312,7 @@ function App() {
   const [persistFormat, setPersistFormat] = useState<"json" | "yaml" | null>(
     null,
   );
-  const [persistPath, setPersistPath] = useState("");
+  const [persistPath, setPersistPath] = useState(defaultGostConfigPath);
   const [isPersisting, setIsPersisting] = useState(false);
   const [configError, setConfigError] = useState("");
   const [notice, setNotice] = useState("");
@@ -648,7 +649,7 @@ function App() {
         `当前运行配置已写入远端 ${persistPath.trim() || `gost.${persistFormat}`}`,
       );
       setPersistFormat(null);
-      setPersistPath("");
+      setPersistPath(defaultGostConfigPath);
     } catch (error) {
       showNotice(
         `写入失败：${error instanceof Error ? error.message : "未知错误"}`,
@@ -765,7 +766,7 @@ function App() {
                 className="secondary"
                 disabled={activeServer?.status !== "online"}
                 onClick={() => {
-                  setPersistPath("");
+                  setPersistPath(defaultGostConfigPath);
                   setPersistFormat("yaml");
                 }}
               >
@@ -1118,7 +1119,7 @@ function App() {
           onMouseDown={() => {
             if (!isPersisting) {
               setPersistFormat(null);
-              setPersistPath("");
+              setPersistPath(defaultGostConfigPath);
             }
           }}
         >
@@ -1137,7 +1138,7 @@ function App() {
                 disabled={isPersisting}
                 onClick={() => {
                   setPersistFormat(null);
-                  setPersistPath("");
+                  setPersistPath(defaultGostConfigPath);
                 }}
               >
                 ×
@@ -1188,7 +1189,7 @@ function App() {
                 disabled={isPersisting}
                 onClick={() => {
                   setPersistFormat(null);
-                  setPersistPath("");
+                  setPersistPath(defaultGostConfigPath);
                 }}
               >
                 取消
