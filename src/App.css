@@ -916,6 +916,55 @@ input[type="checkbox"] {
 .json-modal .form-help {
   margin-top: 11px;
 }
+.persist-modal {
+  width: min(500px, 100%);
+}
+.persist-copy {
+  color: #536762;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.format-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 19px 0 14px;
+}
+.format-options button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid #d7e2dd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  color: #51665f;
+}
+.format-options button:hover,
+.format-options button.selected {
+  border-color: #75a95d;
+  background: #f2f9ec;
+  color: #2c673a;
+}
+.format-options strong {
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+}
+.format-options small {
+  font-size: 10px;
+  color: #7d8d87;
+  line-height: 1.4;
+}
+.persist-warning {
+  border-left: 3px solid #e3ba5e;
+  background: #fff9e9;
+  color: #7d6523;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 9px 11px;
+  margin: 0;
+}
 @media (max-width: 850px) {
   .manager-layout {
     grid-template-columns: 1fr;

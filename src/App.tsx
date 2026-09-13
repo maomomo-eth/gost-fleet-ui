@@ -308,6 +308,10 @@ function App() {
   const [config, setConfig] = useState<JsonObject>({});
   const [isLoadingConfig, setIsLoadingConfig] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [persistFormat, setPersistFormat] = useState<"json" | "yaml" | null>(
+    null,
+  );
+  const [isPersisting, setIsPersisting] = useState(false);
   const [configError, setConfigError] = useState("");
   const [notice, setNotice] = useState("");
   const [editorDiagnostic, setEditorDiagnostic] = useState("");
@@ -630,6 +634,23 @@ function App() {
     anchor.click();
     URL.revokeObjectURL(anchor.href);
   };
+  const persistConfig = async () => {
+    if (!activeServer || !persistFormat) return;
+    setIsPersisting(true);
+    try {
+      await api(activeServer, `/config?format=${persistFormat}`, {
+        method: "POST",
+      });
+      showNotice(`当前运行配置已写入远端 gost.${persistFormat}`);
+      setPersistFormat(null);
+    } catch (error) {
+      showNotice(
+        `写入失败：${error instanceof Error ? error.message : "未知错误"}`,
+      );
+    } finally {
+      setIsPersisting(false);
+    }
+  };
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -733,6 +754,13 @@ function App() {
                 onClick={() => void loadConfig()}
               >
                 {isLoadingConfig ? "加载中…" : "刷新配置"}
+              </button>
+              <button
+                className="secondary"
+                disabled={activeServer?.status !== "online"}
+                onClick={() => setPersistFormat("yaml")}
+              >
+                写入配置文件
               </button>
               <button
                 className="primary"
@@ -1072,6 +1100,75 @@ function App() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+      {persistFormat && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onMouseDown={() => !isPersisting && setPersistFormat(null)}
+        >
+          <section
+            className="modal persist-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="modal-title">
+              <div>
+                <span className="eyebrow">远端 Gost 进程</span>
+                <h2>写入配置文件</h2>
+              </div>
+              <button
+                type="button"
+                className="close"
+                disabled={isPersisting}
+                onClick={() => setPersistFormat(null)}
+              >
+                ×
+              </button>
+            </div>
+            <p className="persist-copy">
+              将当前运行配置保存到 <code>gost.{persistFormat}</code>
+              。之后重启时，Gost 可从该文件恢复当前配置。
+            </p>
+            <div className="format-options">
+              {(["yaml", "json"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className={persistFormat === format ? "selected" : ""}
+                  onClick={() => setPersistFormat(format)}
+                >
+                  <strong>gost.{format}</strong>
+                  <small>
+                    {format === "yaml"
+                      ? "推荐，便于人工维护"
+                      : "适合程序处理与版本控制"}
+                  </small>
+                </button>
+              ))}
+            </div>
+            <p className="persist-warning">
+              注意：如果进程使用 <code>-C /自定义/路径</code>{" "}
+              启动，它不会自动读取这里写入的默认文件；请调整启动参数，或将该文件同步到实际配置路径。
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="secondary"
+                disabled={isPersisting}
+                onClick={() => setPersistFormat(null)}
+              >
+                取消
+              </button>
+              <button
+                className="primary"
+                disabled={isPersisting}
+                onClick={() => void persistConfig()}
+              >
+                {isPersisting ? "写入中…" : `写入 gost.${persistFormat}`}
+              </button>
+            </div>
+          </section>
         </div>
       )}
       {resourceEditor && (
