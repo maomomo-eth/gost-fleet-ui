@@ -311,6 +311,7 @@ function App() {
   const [persistFormat, setPersistFormat] = useState<"json" | "yaml" | null>(
     null,
   );
+  const [persistPath, setPersistPath] = useState("");
   const [isPersisting, setIsPersisting] = useState(false);
   const [configError, setConfigError] = useState("");
   const [notice, setNotice] = useState("");
@@ -638,11 +639,16 @@ function App() {
     if (!activeServer || !persistFormat) return;
     setIsPersisting(true);
     try {
-      await api(activeServer, `/config?format=${persistFormat}`, {
+      const params = new URLSearchParams({ format: persistFormat });
+      if (persistPath.trim()) params.set("path", persistPath.trim());
+      await api(activeServer, `/config?${params.toString()}`, {
         method: "POST",
       });
-      showNotice(`当前运行配置已写入远端 gost.${persistFormat}`);
+      showNotice(
+        `当前运行配置已写入远端 ${persistPath.trim() || `gost.${persistFormat}`}`,
+      );
       setPersistFormat(null);
+      setPersistPath("");
     } catch (error) {
       showNotice(
         `写入失败：${error instanceof Error ? error.message : "未知错误"}`,
@@ -758,7 +764,10 @@ function App() {
               <button
                 className="secondary"
                 disabled={activeServer?.status !== "online"}
-                onClick={() => setPersistFormat("yaml")}
+                onClick={() => {
+                  setPersistPath("");
+                  setPersistFormat("yaml");
+                }}
               >
                 写入配置文件
               </button>
@@ -1106,7 +1115,12 @@ function App() {
         <div
           className="modal-backdrop"
           role="presentation"
-          onMouseDown={() => !isPersisting && setPersistFormat(null)}
+          onMouseDown={() => {
+            if (!isPersisting) {
+              setPersistFormat(null);
+              setPersistPath("");
+            }
+          }}
         >
           <section
             className="modal persist-modal"
@@ -1121,14 +1135,17 @@ function App() {
                 type="button"
                 className="close"
                 disabled={isPersisting}
-                onClick={() => setPersistFormat(null)}
+                onClick={() => {
+                  setPersistFormat(null);
+                  setPersistPath("");
+                }}
               >
                 ×
               </button>
             </div>
             <p className="persist-copy">
-              将当前运行配置保存到 <code>gost.{persistFormat}</code>
-              。之后重启时，Gost 可从该文件恢复当前配置。
+              将当前运行配置写入远端服务器的指定文件。之后重启时，请让 Gost
+              从同一路径读取。
             </p>
             <div className="format-options">
               {(["yaml", "json"] as const).map((format) => (
@@ -1147,16 +1164,32 @@ function App() {
                 </button>
               ))}
             </div>
+            <label className="persist-path">
+              远端保存路径
+              <input
+                value={persistPath}
+                onChange={(event) => setPersistPath(event.target.value)}
+                placeholder={`例如：/etc/gost/gost.${persistFormat}`}
+              />
+              <small>
+                留空时由 Gost 决定：优先覆盖已用 <code>-C</code>{" "}
+                加载的文件，否则写入进程工作目录的{" "}
+                <code>gost.{persistFormat}</code>。
+              </small>
+            </label>
             <p className="persist-warning">
-              注意：如果进程使用 <code>-C /自定义/路径</code>{" "}
-              启动，它不会自动读取这里写入的默认文件；请调整启动参数，或将该文件同步到实际配置路径。
+              目标路径必须存在于远端 Gost 所在主机（或容器）内，并且 Gost
+              进程须有写入权限。不要输入浏览器或本机 Windows 的路径。
             </p>
             <div className="modal-actions">
               <button
                 type="button"
                 className="secondary"
                 disabled={isPersisting}
-                onClick={() => setPersistFormat(null)}
+                onClick={() => {
+                  setPersistFormat(null);
+                  setPersistPath("");
+                }}
               >
                 取消
               </button>
@@ -1165,7 +1198,9 @@ function App() {
                 disabled={isPersisting}
                 onClick={() => void persistConfig()}
               >
-                {isPersisting ? "写入中…" : `写入 gost.${persistFormat}`}
+                {isPersisting
+                  ? "写入中…"
+                  : `写入 ${persistPath.trim() || `gost.${persistFormat}`}`}
               </button>
             </div>
           </section>

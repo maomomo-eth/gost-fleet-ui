@@ -8,7 +8,7 @@
 - 自动读取当前服务器的 `GET /config?format=json` 配置。
 - 对服务、转发链、认证器、分流器、准入控制、解析器、Hosts、限速器和配额进行 JSON 级新建、编辑、删除。
 - 配置操作使用 GOST 的资源级 `POST`、`PUT`、`DELETE` API，保存即刻在目标 Gost 生效。
-- 可通过“写入配置文件”调用 `POST /config?format=yaml` 或 `POST /config?format=json`，将当前运行配置保存为远端 `gost.yaml` 或 `gost.json`。
+- 可通过“写入配置文件”调用 `POST /config?format=yaml&path=/目标路径` 或 JSON 等价接口，将当前运行配置保存到远端指定路径；路径留空则由 Gost 按默认规则决定。
 - 下载当前服务器完整 JSON 配置，并批量检查服务器连通性。
 
 ## 启动
@@ -45,6 +45,6 @@ location /gost/ {
 
 JSON 编辑器会对远端运行配置立即执行写操作。修改前请先通过“导出 JSON”备份，并注意资源对象需要保留唯一的 `name` 字段。
 
-如果 Gost 使用 `-C /自定义/路径.yaml` 启动，“写入配置文件”生成的默认 `gost.yaml`/`gost.json` 不会自动替代该自定义路径。请调整启动参数或将保存后的文件同步到实际配置路径。
+如果 Gost 使用 `-C /自定义/路径.yaml` 启动，请在“远端保存路径”填写同一绝对路径。该路径属于远端 Gost 所在主机或容器，且必须允许 Gost 进程写入；不要填写浏览器或本机 Windows 的路径。
 
 若浏览器访问不到 GOST API，请检查 GOST API 的跨域配置以及管理页面/API 的协议是否兼容。

@@ -924,6 +924,31 @@ input[type="checkbox"] {
   font-size: 13px;
   line-height: 1.65;
 }
+.persist-path {
+  display: block;
+  color: #52635f;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 2px 0 14px;
+}
+.persist-path input {
+  display: block;
+  width: 100%;
+  border: 1px solid #d4dfda;
+  border-radius: 7px;
+  padding: 10px;
+  margin-top: 6px;
+  color: #263b35;
+  outline-color: #78a966;
+}
+.persist-path small {
+  display: block;
+  color: #82908c;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
 .format-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
