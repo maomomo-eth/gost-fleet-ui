@@ -47,6 +47,27 @@
   font-size: 17px;
   margin-right: 9px;
 }
+.server-transfer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+.server-transfer button {
+  border: 1px solid #315a52;
+  background: transparent;
+  color: #b7cbc5;
+  border-radius: 6px;
+  padding: 7px 5px;
+  font-size: 10px;
+}
+.server-transfer button:hover {
+  background: #1b403b;
+  color: #eaffd9;
+}
+.server-transfer input {
+  display: none;
+}
 .sidebar-label {
   font-size: 11px;
   text-transform: uppercase;

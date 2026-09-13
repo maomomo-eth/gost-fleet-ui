@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import "./App.css";
 
 type ServerStatus = "online" | "offline" | "unknown";
@@ -311,6 +311,7 @@ function App() {
   const [configError, setConfigError] = useState("");
   const [notice, setNotice] = useState("");
   const [editorDiagnostic, setEditorDiagnostic] = useState("");
+  const serverImportRef = useRef<HTMLInputElement>(null);
   useEffect(
     () => localStorage.setItem(storageKey, JSON.stringify(servers)),
     [servers],
@@ -441,6 +442,73 @@ function App() {
     setSelectedIds((items) => items.filter((item) => item !== id));
     if (activeId === id)
       setActiveId(servers.find((item) => item.id !== id)?.id ?? "");
+  };
+  const exportServers = () => {
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      servers: servers.map(({ checkedAt: _checkedAt, ...server }) => ({
+        ...server,
+        status: "unknown" as ServerStatus,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = `gost-fleet-servers-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+    showNotice("服务器列表已导出；文件包含密码，请妥善保管");
+  };
+  const importServers = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const parsed: unknown = JSON.parse(await file.text());
+      const payload = asObject(parsed);
+      const rawServers: unknown[] = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(payload.servers)
+          ? payload.servers
+          : [];
+      const usedIds = new Set(servers.map((server) => server.id));
+      const imported = rawServers.flatMap((raw) => {
+        const item = asObject(raw);
+        const name = typeof item.name === "string" ? item.name.trim() : "";
+        const url = typeof item.url === "string" ? item.url.trim() : "";
+        if (!name || !/^https?:\/\//.test(url)) return [];
+        const candidateId = typeof item.id === "string" ? item.id : "";
+        const id =
+          candidateId && !usedIds.has(candidateId)
+            ? candidateId
+            : crypto.randomUUID();
+        usedIds.add(id);
+        return [
+          {
+            id,
+            name,
+            url,
+            username: typeof item.username === "string" ? item.username : "",
+            password: typeof item.password === "string" ? item.password : "",
+            group:
+              typeof item.group === "string" && item.group.trim()
+                ? item.group
+                : "未分组",
+            status: "unknown" as ServerStatus,
+          },
+        ];
+      });
+      if (!imported.length)
+        return showNotice("未找到有效服务器：需包含名称和 http(s) API URL");
+      updateServers((items) => [...items, ...imported]);
+      if (!activeId) setActiveId(imported[0].id);
+      showNotice(`已导入 ${imported.length} 台服务器，连接状态待检测`);
+    } catch {
+      showNotice("导入失败：请选择有效的 Gost Fleet JSON 文件");
+    }
   };
   const openCreate = () => {
     if (activeResource.readOnly)
@@ -578,6 +646,23 @@ function App() {
         >
           <span>＋</span> 添加服务器
         </button>
+        <div className="server-transfer">
+          <button type="button" onClick={exportServers}>
+            ⇩ 导出列表
+          </button>
+          <button
+            type="button"
+            onClick={() => serverImportRef.current?.click()}
+          >
+            ⇧ 导入列表
+          </button>
+          <input
+            ref={serverImportRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => void importServers(event)}
+          />
+        </div>
         <div className="sidebar-label">
           服务器库 <span>{servers.length}</span>
         </div>
